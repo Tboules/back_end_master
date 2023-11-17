@@ -3,7 +3,7 @@
 //   sqlc v1.23.0
 // source: accounts.sql
 
-package sqlc
+package db
 
 import (
 	"context"
