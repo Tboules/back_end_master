@@ -6,10 +6,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-var testQueries *Queries
+var testStore *Store
 
 const (
 	dbDriver = "postgres"
@@ -17,13 +17,13 @@ const (
 )
 
 func TestMain(m *testing.M) {
-	conn, err := pgx.Connect(context.Background(), dbSource)
+	conn, err := pgxpool.New(context.Background(), dbSource)
 
 	if err != nil {
 		log.Fatal("TestMain cannot connect to db:", err)
 	}
 
-	testQueries = New(conn)
+	testStore = NewStore(conn)
 
 	os.Exit(m.Run())
 }
