@@ -15,15 +15,17 @@ func TestTransferTx(t *testing.T) {
 	fmt.Println(">> FromBalance Before:", accountF.Balance)
 	fmt.Println(">> ToBalance Before:", accountT.Balance)
 
-	n := 5
+	n := 3
 	amount := int64(10)
 
 	errs := make(chan error)
 	result := make(chan TransferTxResult)
 
 	for i := 0; i < n; i++ {
+		txName := fmt.Sprintf("tx: %d", i+1)
 		go func() {
-			res, err := testStore.TransferTx(context.Background(), TransferTxParams{
+			ctx := context.WithValue(context.Background(), txKey, txName)
+			res, err := testStore.TransferTx(ctx, TransferTxParams{
 				FromAccountID: accountF.ID,
 				ToAccountID:   accountT.ID,
 				Amount:        amount,

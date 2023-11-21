@@ -51,12 +51,17 @@ type TransferTxResult struct {
 	ToEntry     Entries   `json:"to_entry"`
 }
 
+var txKey = struct{}{}
+
 func (s *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferTxResult, error) {
 	var res TransferTxResult
 
 	err := s.execTx(ctx, func(q *Queries) error {
 		var err error
 
+		txName := ctx.Value(txKey)
+
+		fmt.Println(txName, "create transfer")
 		res.Transfer, err = q.CreateTransfer(ctx, CreateTransferParams{
 			FromAccountID: arg.FromAccountID,
 			ToAccountID:   arg.ToAccountID,
@@ -66,6 +71,7 @@ func (s *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferT
 			return err
 		}
 
+		fmt.Println(txName, "create from entry")
 		res.FromEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.FromAccountID,
 			Amount:    -arg.Amount,
@@ -74,6 +80,7 @@ func (s *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferT
 			return err
 		}
 
+		fmt.Println(txName, "create to entry")
 		res.ToEntry, err = q.CreateEntry(ctx, CreateEntryParams{
 			AccountID: arg.ToAccountID,
 			Amount:    arg.Amount,
@@ -83,11 +90,13 @@ func (s *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferT
 		}
 
 		//TODO : update accounts balance
-		fromAccount, err := q.GetAccount(ctx, arg.FromAccountID)
+		fmt.Println(txName, "get from account for update")
+		fromAccount, err := q.GetAccountForUpdate(ctx, arg.FromAccountID)
 		if err != nil {
 			return err
 		}
 
+		fmt.Println(txName, "update from account balance")
 		res.FromAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
 			ID:      fromAccount.ID,
 			Balance: fromAccount.Balance - arg.Amount,
@@ -96,11 +105,13 @@ func (s *Store) TransferTx(ctx context.Context, arg TransferTxParams) (TransferT
 			return err
 		}
 
-		toAccount, err := q.GetAccount(ctx, arg.ToAccountID)
+		fmt.Println(txName, "get to account for update")
+		toAccount, err := q.GetAccountForUpdate(ctx, arg.ToAccountID)
 		if err != nil {
 			return err
 		}
 
+		fmt.Println(txName, "update to account balance")
 		res.ToAccount, err = q.UpdateAccount(ctx, UpdateAccountParams{
 			ID:      toAccount.ID,
 			Balance: toAccount.Balance + arg.Amount,
