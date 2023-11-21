@@ -2,7 +2,6 @@ package db
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,20 +11,15 @@ func TestTransferTx(t *testing.T) {
 	accountF := createRandomAccount(t)
 	accountT := createRandomAccount(t)
 
-	fmt.Println(">> FromBalance Before:", accountF.Balance)
-	fmt.Println(">> ToBalance Before:", accountT.Balance)
-
-	n := 3
+	n := 5
 	amount := int64(10)
 
 	errs := make(chan error)
 	result := make(chan TransferTxResult)
 
 	for i := 0; i < n; i++ {
-		txName := fmt.Sprintf("tx: %d", i+1)
 		go func() {
-			ctx := context.WithValue(context.Background(), txKey, txName)
-			res, err := testStore.TransferTx(ctx, TransferTxParams{
+			res, err := testStore.TransferTx(context.Background(), TransferTxParams{
 				FromAccountID: accountF.ID,
 				ToAccountID:   accountT.ID,
 				Amount:        amount,
@@ -85,8 +79,6 @@ func TestTransferTx(t *testing.T) {
 		require.Equal(t, toAccount.ID, accountT.ID)
 
 		//check account balance
-		fmt.Println(">>tx balance from", fromAccount.Balance)
-		fmt.Println(">>tx balance to", toAccount.Balance)
 
 		fromDif := accountF.Balance - fromAccount.Balance
 		toDif := toAccount.Balance - accountT.Balance
@@ -105,9 +97,6 @@ func TestTransferTx(t *testing.T) {
 
 	updatedAccount2, err := testStore.GetAccount(context.Background(), accountT.ID)
 	require.NoError(t, err)
-
-	fmt.Println(">> after From Balance:", updatedAccount1.Balance)
-	fmt.Println(">> after To Balance:", updatedAccount2.Balance)
 
 	require.Equal(t, accountF.Balance-int64(n)*amount, updatedAccount1.Balance)
 	require.Equal(t, accountT.Balance+int64(n)*amount, updatedAccount2.Balance)
