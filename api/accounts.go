@@ -85,11 +85,5 @@ func (s *Server) getAccounts(c *gin.Context) {
 		return
 	}
 
-	//check if accounts are empty at that pageid
-	if len(accounts) == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "No Accounts Found"})
-		return
-	}
-
 	c.JSON(http.StatusOK, accounts)
 }
