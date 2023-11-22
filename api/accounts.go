@@ -63,8 +63,8 @@ func (s *Server) getAccountByID(c *gin.Context) {
 }
 
 type getAccountsQueryParams struct {
-	PageID   int64 `form:"page_id" binding:"required"`
-	PageSize int64 `form:"page_size" binding:"required,max=50"`
+	PageID   int64 `form:"page_id" binding:"required,min=1"`
+	PageSize int64 `form:"page_size" binding:"required,min=5,max=20"`
 }
 
 func (s *Server) getAccounts(c *gin.Context) {
