@@ -6,6 +6,7 @@ import (
 
 	db "github.com/Tboules/back_end_master/db/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/jackc/pgx/v5"
 )
 
 type createAccountParams struct {
@@ -13,11 +14,12 @@ type createAccountParams struct {
 	Currency string `json:"currency" binding:"required,oneof=USD EUR"`
 }
 
-func (s *Server) createAccount(ctx *gin.Context) {
+func (s *Server) createAccount(c *gin.Context) {
 	var req createAccountParams
-	err := ctx.ShouldBindJSON(&req)
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorRresponse(err))
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
 	}
 
 	newAccount, err := s.store.CreateAccount(context.Background(), db.CreateAccountParams{
@@ -27,9 +29,35 @@ func (s *Server) createAccount(ctx *gin.Context) {
 	})
 
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorRresponse(err))
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, newAccount)
+	c.JSON(http.StatusOK, newAccount)
+}
+
+type getAccountByIDParams struct {
+	ID int64 `uri:"id" binding:"required,min=1"`
+}
+
+func (s *Server) getAccountByID(c *gin.Context) {
+	var req getAccountByIDParams
+
+	if err := c.ShouldBindUri(&req); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	account, err := s.store.GetAccount(context.Background(), req.ID)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			c.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	c.JSON(http.StatusOK, account)
 }
