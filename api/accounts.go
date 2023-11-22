@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	db "github.com/Tboules/back_end_master/db/sqlc"
@@ -60,4 +61,36 @@ func (s *Server) getAccountByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, account)
+}
+
+type getAccountsQueryParams struct {
+	PageID   int64 `form:"page_id" binding:"required"`
+	PageSize int64 `form:"page_size" binding:"required,max=50"`
+}
+
+func (s *Server) getAccounts(c *gin.Context) {
+	var query getAccountsQueryParams
+
+	if err := c.ShouldBindQuery(&query); err != nil {
+		c.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	accounts, err := s.store.ListAccounts(context.Background(), db.ListAccountsParams{
+		Limit:  query.PageSize,
+		Offset: (query.PageID - 1) * query.PageSize,
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	//check if accounts are empty at that pageid
+	if len(accounts) == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No Accounts Found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, accounts)
 }
