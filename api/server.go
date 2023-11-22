@@ -10,15 +10,20 @@ type Server struct {
 	router *gin.Engine
 }
 
-func NewServer(s *db.Store) *Server {
-	r := gin.Default()
-
-	r.POST("/account", s.createAccount)
-
-	return &Server{
-		store:  s,
-		router: r,
+func NewServer(store *db.Store) *Server {
+	router := gin.Default()
+	server := &Server{
+		store: store,
 	}
+
+	router.POST("/account", server.createAccount)
+
+	server.router = router
+	return server
+}
+
+func (s *Server) Start(address string) error {
+	return s.router.Run(address)
 }
 
 func errorRresponse(err error) gin.H {
