@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	db "github.com/Tboules/back_end_master/db/sqlc"
