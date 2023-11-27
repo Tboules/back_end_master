@@ -6,18 +6,19 @@ import (
 	"os"
 	"testing"
 
+	"github.com/Tboules/back_end_master/util"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var testStore *Store
 
-const (
-	dbDriver = "postgres"
-	dbSource = "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable"
-)
-
 func TestMain(m *testing.M) {
-	conn, err := pgxpool.New(context.Background(), dbSource)
+	config, err := util.LoadConfig("../..")
+	if err != nil {
+		log.Fatal("Could not load config:", err)
+	}
+
+	conn, err := pgxpool.New(context.Background(), config.DBSource)
 
 	if err != nil {
 		log.Fatal("TestMain cannot connect to db:", err)
